@@ -1,6 +1,7 @@
 #!/bin/bash
 
 deploy_app() {
+    trap cleanup_on_interrupt SIGINT SIGTSTP
 
     echo "Checking requirements..."
 
@@ -21,9 +22,6 @@ deploy_app() {
 read -p "Enter project name: " project_name
 
 PROJECT_DIR="attendance_tracker_${project_name}"
-run_app() {
-    echo "Run feature selected"
-}
 
 if [ -d "$PROJECT_DIR" ]; then
     read -p "Directory already exists. Overwrite? (y/n): " answer
@@ -64,6 +62,18 @@ if [ "$roster_option" = "1" ]; then
 
 fi
 }
+
+cleanup_on_interrupt() {
+    echo ""
+    echo "Deployment interrupted! Archiving what was created so far..."
+    if [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+        zip -rq "${PROJECT_DIR}_archive.zip" "$PROJECT_DIR"
+        rm -rf "$PROJECT_DIR"
+        echo "Archive saved as ${PROJECT_DIR}_archive.zip"
+    fi
+    exit 1
+}
+
 run_app() {
     echo "Run feature selected"
 }
