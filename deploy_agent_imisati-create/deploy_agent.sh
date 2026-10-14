@@ -61,6 +61,10 @@ if [ "$roster_option" = "1" ]; then
     echo "Roster copied."
 
 fi
+
+    chmod +x "$PROJECT_DIR/attendance_checker.py"
+    chmod 600 "$PROJECT_DIR/Helpers/config.json"
+    echo "Permissions set: attendance_checker.py is executable (+x), config.json is owner read/write only (600)"
 }
 
 cleanup_on_interrupt() {
