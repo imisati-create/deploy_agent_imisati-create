@@ -1,3 +1,5 @@
+#!/bin/bash
+
 deploy_app() {
 
     echo "Checking requirements..."
@@ -14,7 +16,7 @@ deploy_app() {
 
     echo "Requirements verified."
 
-}
+
 
 read -p "Enter project name: " project_name
 
@@ -48,7 +50,6 @@ echo "Template files copied."
 echo "Choose roster option"
 echo "1. Copy Template Roster"
 echo "2. Generate New Roster"
-
 read -p "Select option: " roster_option
 
 if [ "$roster_option" = "1" ]; then
@@ -62,21 +63,29 @@ if [ "$roster_option" = "1" ]; then
     echo "Roster copied."
 
 fi
+}
+run_app() {
+    echo "Run feature selected"
+}
 archive_logs() {
     echo "Archive feature selected"
 }
 
+while true; do
 echo "===== Deployment Agent ====="
 echo "1. Deploy Application"
 echo "2. Run Application"
 echo "3. Archive Logs"
-
+echo "4. Exit"
 read -p "Choose an option: " choice
 
 case $choice in
     1) deploy_app ;;
     2) run_app ;;
     3) archive_logs ;;
+    4) exit 0 ;;
     *) echo "Invalid option" ;;
-esac
 
+
+esac
+done
