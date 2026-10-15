@@ -1,26 +1,14 @@
 #!/usr/bin/env bash
-# =============================================================================
-# deploy_agent.sh - Bootstrap, run and archive the Student Attendance Tracker
-#
-# Usage:
-#   ./deploy_agent.sh                 interactive menu
-#   ./deploy_agent.sh --deploy        feature 1: deploy
-#   ./deploy_agent.sh --run           feature 2: run
-#   ./deploy_agent.sh --archive       feature 3: archive logs
-#   ./deploy_agent.sh --help
-#
-# Expects a templates/ folder next to this script containing the three
-# unmodified source files: attendance_checker.py, assets.csv, config.json
-# =============================================================================
+
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATES_DIR="$SCRIPT_DIR/templates"
 
-# Set once creation of a project directory begins; used by the signal handler.
+
 DEPLOY_DIR=""
 DEPLOY_NAME=""
 
-# ----------------------------------------------------------------- helpers ---
+
 info()  { printf '[INFO]  %s\n' "$*"; }
 ok()    { printf '[ OK ]  %s\n' "$*"; }
 warn()  { printf '[WARN]  %s\n' "$*" >&2; }
@@ -28,7 +16,6 @@ err()   { printf '[ERROR] %s\n' "$*" >&2; }
 
 is_uint() { [[ "$1" =~ ^[0-9]+$ ]]; }
 
-# Ask for a project name; sets global NAME_INPUT (letters, digits, _ and - only)
 ask_project_name() {
     local raw
     while true; do
@@ -44,7 +31,7 @@ ask_project_name() {
     done
 }
 
-# Ask for an integer in [min,max]; sets global INT_INPUT
+
 ask_int_in_range() {
     local prompt="$1" min="$2" max="$3" val
     while true; do
@@ -57,11 +44,8 @@ ask_int_in_range() {
     done
 }
 
-# ------------------------------------------------------------ signal handling
-# Called on Ctrl+C (SIGINT) or Ctrl+Z (SIGTSTP) while deploying:
-# zip whatever exists, delete the half-made directory, exit cleanly.
 handle_interrupt() {
-    trap '' INT TSTP   # ignore further signals while cleaning up
+    trap '' INT TSTP 
     echo
     warn "Deployment interrupted by user (signal received)."
 
@@ -83,7 +67,7 @@ handle_interrupt() {
     exit 130
 }
 
-# Called on a normal deployment error: remove what we created, no zip.
+
 abort_deploy() {
     err "$*"
     if [[ -n "$DEPLOY_DIR" && -d "$SCRIPT_DIR/$DEPLOY_DIR" ]]; then
@@ -94,7 +78,7 @@ abort_deploy() {
     exit 1
 }
 
-# ------------------------------------------------------- feature 1: deploy ---
+
 preflight_checks() {
     local missing=0
     for cmd in python3 zip; do
@@ -117,7 +101,7 @@ preflight_checks() {
     ok "All templates present in templates/"
 }
 
-# Option A: copy N student rows (plus header) from the template.
+# Option A: 
 build_roster_copy() {
     local dest="$1"
     local available
@@ -130,7 +114,7 @@ build_roster_copy() {
     SESSIONS_VALUE=5    # template rows carry 4 prior sessions
 }
 
-# Option B: generate a fresh roster with zeroed counts.
+# Option B: 
 build_roster_generate() {
     local dest="$1"
     local first=(Alice Bob Carol David Emma Frank Grace Henry Irene James
@@ -148,7 +132,7 @@ build_roster_generate() {
         done
     } > "$dest" || abort_deploy "Could not write $dest"
     ok "Generated fresh roster with $INT_INPUT student(s)."
-    SESSIONS_VALUE=1    # nobody has any prior sessions
+    SESSIONS_VALUE=1    
 }
 
 update_thresholds() {
@@ -174,7 +158,6 @@ update_thresholds() {
         break
     done
 
-    # In-place edit of just those two lines (portable: GNU and BSD sed).
     sed -i.bak \
         -e "s/\"warning\": *[0-9][0-9]*/\"warning\": $warn_val/" \
         -e "s/\"failure\": *[0-9][0-9]*/\"failure\": $fail_val/" "$cfg" \
@@ -204,7 +187,7 @@ deploy_project() {
         fi
     fi
 
-    # From here on, an interrupt must archive + clean up.
+    
     DEPLOY_DIR="$dir"
     trap handle_interrupt INT TSTP
 
@@ -231,7 +214,7 @@ deploy_project() {
         esac
     done
 
-    # Keep total_sessions consistent with the roster (prior sessions + 1).
+    
     if [[ "$SESSIONS_VALUE" != "5" ]]; then
         sed -i.bak "s/\"total_sessions\": *[0-9][0-9]*/\"total_sessions\": $SESSIONS_VALUE/" \
             "$full/Helpers/config.json" || abort_deploy "Could not set total_sessions"
@@ -247,7 +230,7 @@ deploy_project() {
     echo
     update_thresholds "$full/Helpers/config.json"
 
-    # Deployment finished: the trap no longer applies (it is for deploy only).
+   
     trap - INT TSTP
     DEPLOY_DIR=""
     ok "Deployment complete."
@@ -257,7 +240,7 @@ deploy_project() {
     run_project "$DEPLOY_NAME"
 }
 
-# --------------------------------------------------------- feature 2: run ---
+
 run_project() {
     local name="${1:-}"
     if [[ -z "$name" ]]; then
@@ -279,7 +262,7 @@ run_project() {
     return $rc
 }
 
-# ------------------------------------------------------ feature 3: archive ---
+
 archive_logs() {
     echo "=== Archive log files ==="
     local name="${1:-}"
@@ -313,7 +296,7 @@ archive_logs() {
     return 0
 }
 
-# -------------------------------------------------------------------- menu ---
+
 usage() {
     sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
